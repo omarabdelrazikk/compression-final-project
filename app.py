@@ -89,6 +89,25 @@ def index():
             }
             result_message = f"Text compressed using {algo_name}."
 
+        elif action == "lossy_text_file":
+            file = request.files.get("file")
+            algo_name = request.form.get("algo")
+            
+            if file:
+                text = file.read().decode('utf-8')
+                algo = get_lossy_algo(algo_name)
+                compressed_data = algo.compress(text, is_image=False)
+                
+                CONTEXT = {
+                    "original": text,
+                    "compressed": compressed_data,
+                    "algo_instance": algo,
+                    "is_image": False,
+                    "algo_name": algo_name,
+                    "extra_data": {}
+                }
+                result_message = f"Text file compressed using lossy {algo_name}."
+
         elif action == "lossless_text":
             text = request.form.get("text")
             algo_name = request.form.get("algo")
@@ -111,11 +130,72 @@ def index():
             }
             result_message = f"Text compressed using {algo_name}."
 
+        elif action == "lossless_file":
+            file = request.files.get("file")
+            algo_name = request.form.get("algo")
+            file_type = request.form.get("file_type")  # 'text' or 'image'
+            
+            if file:
+                algo = get_lossless_algo(algo_name)
+                
+                if file_type == "image":
+                    # Load image and convert to grayscale
+                    img = Image.open(file).convert('L')
+                    img_array = np.array(img)
+                    
+                    # Store image dimensions
+                    height, width = img_array.shape
+                    
+                    # Convert image to string representation for lossless compression
+                    # Format: "width,height:pixel1,pixel2,pixel3,..."
+                    img_string = f"{width},{height}:" + ','.join(str(pixel) for pixel in img_array.flatten())
+                    
+                    if algo_name == "Huffman":
+                        compressed_data, codebook = algo.compress(img_string)
+                        extra = {"codebook": codebook}
+                    else:
+                        compressed_data = algo.compress(img_string)
+                        extra = {}
+                    
+                    CONTEXT = {
+                        "original": img_string,
+                        "compressed": compressed_data,
+                        "algo_instance": algo,
+                        "is_image": True,
+                        "algo_name": algo_name,
+                        "extra_data": extra
+                    }
+                    result_message = f"Image compressed using lossless {algo_name}."
+                    
+                else:  # text file
+                    text = file.read().decode('utf-8')
+                    
+                    if algo_name == "Huffman":
+                        compressed_data, codebook = algo.compress(text)
+                        extra = {"codebook": codebook}
+                    else:
+                        compressed_data = algo.compress(text)
+                        extra = {}
+                    
+                    CONTEXT = {
+                        "original": text,
+                        "compressed": compressed_data,
+                        "algo_instance": algo,
+                        "is_image": False,
+                        "algo_name": algo_name,
+                        "extra_data": extra
+                    }
+                    result_message = f"Text file compressed using {algo_name}."
+
         elif action == "decompress":
             if CONTEXT["algo_instance"]:
                 algo = CONTEXT["algo_instance"]
                 data = CONTEXT["compressed"]
                 is_img = CONTEXT["is_image"]
+                algo_name = CONTEXT["algo_name"]
+                
+                # Check if this is a lossless algorithm
+                is_lossless = algo_name in ["LZW", "Golomb", "Huffman", "RLE"]
                 
                 if CONTEXT["algo_name"] == "Huffman":
                     decompressed = algo.decompress(data, CONTEXT["extra_data"]["codebook"])
@@ -130,7 +210,16 @@ def index():
                     # Save for display
                     static_dir = os.path.join(app.root_path, 'static')
                     os.makedirs(static_dir, exist_ok=True)
-                    if isinstance(decompressed, Image.Image):
+                    
+                    if is_lossless and isinstance(decompressed, str):
+                        # Reconstruct image from string representation
+                        # Format: "width,height:pixel1,pixel2,pixel3,..."
+                        header, pixels_str = decompressed.split(':')
+                        width, height = map(int, header.split(','))
+                        pixels = np.array([int(p) for p in pixels_str.split(',')], dtype=np.uint8)
+                        img_array = pixels.reshape((height, width))
+                        Image.fromarray(img_array).save(os.path.join(static_dir, 'decompressed.png'))
+                    elif isinstance(decompressed, Image.Image):
                         decompressed.save(os.path.join(static_dir, 'decompressed.png'))
                     else:
                         # Ensure it's an image object if numpy array
@@ -152,6 +241,9 @@ def index():
                 # Re-run decompression
                 algo = CONTEXT["algo_instance"]
                 is_img = CONTEXT["is_image"]
+                algo_name = CONTEXT["algo_name"]
+                
+                is_lossless = algo_name in ["LZW", "Golomb", "Huffman", "RLE"]
                 
                 if CONTEXT["algo_name"] == "Huffman":
                     decomp = algo.decompress(comp, CONTEXT["extra_data"]["codebook"])
@@ -163,8 +255,22 @@ def index():
 
                 # Prepare data for metrics (convert to numpy/arrays if needed)
                 if is_img:
-                    orig_for_metric = np.array(orig)
-                    if isinstance(decomp, Image.Image):
+                    if is_lossless and isinstance(orig, str):
+                        # Parse original image string
+                        header, pixels_str = orig.split(':')
+                        width, height = map(int, header.split(','))
+                        pixels = np.array([int(p) for p in pixels_str.split(',')], dtype=np.uint8)
+                        orig_for_metric = pixels.reshape((height, width))
+                    else:
+                        orig_for_metric = np.array(orig)
+                    
+                    if is_lossless and isinstance(decomp, str):
+                        # Parse decompressed image string
+                        header, pixels_str = decomp.split(':')
+                        width, height = map(int, header.split(','))
+                        pixels = np.array([int(p) for p in pixels_str.split(',')], dtype=np.uint8)
+                        decomp_for_metric = pixels.reshape((height, width))
+                    elif isinstance(decomp, Image.Image):
                         decomp_for_metric = np.array(decomp)
                     else:
                         decomp_for_metric = np.array(decomp)
@@ -189,3 +295,6 @@ def index():
                 result_message = "Metrics calculated."
 
     return render_template("index.html", result_message=result_message, decompressed_content=decompressed_content, metrics=metrics, is_image=is_image)
+
+if __name__ == "__main__":
+    app.run(debug=True)

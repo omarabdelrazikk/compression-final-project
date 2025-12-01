@@ -23,22 +23,27 @@
         <div id="lossy-section">
             <div class="mb-3">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="lossyInputType" id="lossyFileOption" value="file"
-                        checked>
-                    <label class="form-check-label" for="lossyFileOption">File</label>
+                    <input class="form-check-input" type="radio" name="lossyInputType" id="lossyImageFileOption"
+                        value="image" checked>
+                    <label class="form-check-label" for="lossyImageFileOption">Image File</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="lossyInputType" id="lossyTextFileOption"
+                        value="textfile">
+                    <label class="form-check-label" for="lossyTextFileOption">Text File</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="lossyInputType" id="lossyTextOption"
                         value="text">
-                    <label class="form-check-label" for="lossyTextOption">Text</label>
+                    <label class="form-check-label" for="lossyTextOption">Direct Text</label>
                 </div>
             </div>
 
-            <div id="lossy-file-container">
+            <div id="lossy-image-file-container">
                 <form action="/" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label for="lossyAlgoFile" class="form-label">Compression Algorithm</label>
-                        <select class="form-select" id="lossyAlgoFile" name="algo">
+                        <label for="lossyAlgoImageFile" class="form-label">Compression Algorithm</label>
+                        <select class="form-select" id="lossyAlgoImageFile" name="algo">
                             <option value="Uniform">Uniform Quantization</option>
                             <option value="Scalar">Scalar Quantization</option>
                             <option value="Vector">Vector Quantization</option>
@@ -46,10 +51,31 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="formFile" class="form-label">File input (allowed: .jpg, .png, .jpeg)</label>
-                        <input class="form-control" type="file" id="formFile" name="file">
+                        <label for="lossyImageFile" class="form-label">Upload Image File (.jpg, .png, .jpeg)</label>
+                        <input class="form-control" type="file" id="lossyImageFile" name="file"
+                            accept=".jpg,.jpeg,.png">
                     </div>
                     <button type="submit" name="action" value="lossy_file" class="btn btn-success">Compress
+                        Image</button>
+                </form>
+            </div>
+
+            <div id="lossy-text-file-container" class="d-none">
+                <form action="/" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="lossyAlgoTextFile" class="form-label">Compression Algorithm</label>
+                        <select class="form-select" id="lossyAlgoTextFile" name="algo">
+                            <option value="Uniform">Uniform Quantization</option>
+                            <option value="Scalar">Scalar Quantization</option>
+                            <option value="Vector">Vector Quantization</option>
+                            <option value="LloydMax">Lloyd-Max Quantization</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lossyTextFile" class="form-label">Upload Text File (.txt)</label>
+                        <input class="form-control" type="file" id="lossyTextFile" name="file" accept=".txt">
+                    </div>
+                    <button type="submit" name="action" value="lossy_text_file" class="btn btn-success">Compress Text
                         File</button>
                 </form>
             </div>
@@ -78,23 +104,64 @@
 
         <!-- Lossless Section (Hidden by default) -->
         <div id="lossless-section" class="d-none">
-            <form action="/" method="post">
-                <div class="mb-3">
-                    <label for="losslessAlgo" class="form-label">Compression Algorithm</label>
-                    <select class="form-select" id="losslessAlgo" name="algo">
-                        <option value="LZW">LZW Coding (Lempel–Ziv–Welch)</option>
-                        <option value="Golomb">Golomb Coding</option>
-                        <option value="Huffman">Huffman Coding</option>
-                        <option value="RLE">Run-Length Encoding (RLE)</option>
-                    </select>
+            <div class="mb-3">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="losslessInputType" id="losslessTextFileOption"
+                        value="text" checked>
+                    <label class="form-check-label" for="losslessTextFileOption">Text File</label>
                 </div>
-                <div class="mb-3">
-                    <label for="textInput" class="form-label">Enter text</label>
-                    <input type="text" class="form-control" id="textInput" name="text" placeholder="Enter text here">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="losslessInputType" id="losslessImageOption"
+                        value="image">
+                    <label class="form-check-label" for="losslessImageOption">Image</label>
                 </div>
-                <button type="submit" name="action" value="lossless_text" class="btn btn-primary">Compress Text</button>
-            </form>
+            </div>
+
+            <div id="lossless-text-container">
+                <form action="/" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="losslessAlgoText" class="form-label">Compression Algorithm</label>
+                        <select class="form-select" id="losslessAlgoText" name="algo">
+                            <option value="LZW">LZW Coding (Lempel–Ziv–Welch)</option>
+                            <option value="Golomb">Golomb Coding</option>
+                            <option value="Huffman">Huffman Coding</option>
+                            <option value="RLE">Run-Length Encoding (RLE)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="textFileInput" class="form-label">Upload Text File (.txt)</label>
+                        <input type="file" class="form-control" id="textFileInput" name="file" accept=".txt">
+                    </div>
+                    <input type="hidden" name="file_type" value="text">
+                    <button type="submit" name="action" value="lossless_file" class="btn btn-primary">Compress Text
+                        File</button>
+                </form>
+            </div>
+
+            <div id="lossless-image-container" class="d-none">
+                <form action="/" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="losslessAlgoImage" class="form-label">Compression Algorithm</label>
+                        <select class="form-select" id="losslessAlgoImage" name="algo">
+                            <option value="LZW">LZW Coding (Lempel–Ziv–Welch)</option>
+                            <option value="Golomb">Golomb Coding</option>
+                            <option value="Huffman">Huffman Coding</option>
+                            <option value="RLE">Run-Length Encoding (RLE)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imageFileInput" class="form-label">Upload Image File (.jpg, .png, .jpeg)</label>
+                        <input type="file" class="form-control" id="imageFileInput" name="file"
+                            accept=".jpg,.jpeg,.png">
+                    </div>
+                    <input type="hidden" name="file_type" value="image">
+                    <button type="submit" name="action" value="lossless_file" class="btn btn-primary">Compress
+                        Image</button>
+                </form>
+            </div>
         </div>
+
+
 
         <!-- Results Section -->
         {% if result_message %}
@@ -115,10 +182,10 @@
             <div class="mt-3">
                 <h5>Decompressed Content:</h5>
                 {% if is_image %}
-                <img src="{{ url_for('static', filename='decompressed.png') }}" class="img-fluid"
-                    alt="Decompressed Image">
+                <img src="{{ url_for('static', filename='decompressed.png') }}?{{ range(1, 10000) | random }}"
+                    class="img-fluid" alt="Decompressed Image">
                 {% else %}
-                <pre>{{ decompressed_content }}</pre>
+                <pre style="max-height: 400px; overflow-y: auto;">{{ decompressed_content }}</pre>
                 {% endif %}
             </div>
             {% endif %}
@@ -162,10 +229,17 @@
             const losslessSection = document.getElementById('lossless-section');
             const switchLabel = document.querySelector('label[for="compressionSwitch"]');
 
-            const lossyFileOption = document.getElementById('lossyFileOption');
+            const lossyImageFileOption = document.getElementById('lossyImageFileOption');
+            const lossyTextFileOption = document.getElementById('lossyTextFileOption');
             const lossyTextOption = document.getElementById('lossyTextOption');
-            const lossyFileContainer = document.getElementById('lossy-file-container');
+            const lossyImageFileContainer = document.getElementById('lossy-image-file-container');
+            const lossyTextFileContainer = document.getElementById('lossy-text-file-container');
             const lossyTextContainer = document.getElementById('lossy-text-container');
+
+            const losslessTextFileOption = document.getElementById('losslessTextFileOption');
+            const losslessImageOption = document.getElementById('losslessImageOption');
+            const losslessTextContainer = document.getElementById('lossless-text-container');
+            const losslessImageContainer = document.getElementById('lossless-image-container');
 
             function updateUI() {
                 if (switchEl.checked) {
@@ -175,11 +249,17 @@
                     switchLabel.textContent = "Lossy Compression";
 
                     // Handle Lossy Sub-options
-                    if (lossyFileOption.checked) {
-                        lossyFileContainer.classList.remove('d-none');
+                    if (lossyImageFileOption.checked) {
+                        lossyImageFileContainer.classList.remove('d-none');
+                        lossyTextFileContainer.classList.add('d-none');
+                        lossyTextContainer.classList.add('d-none');
+                    } else if (lossyTextFileOption.checked) {
+                        lossyImageFileContainer.classList.add('d-none');
+                        lossyTextFileContainer.classList.remove('d-none');
                         lossyTextContainer.classList.add('d-none');
                     } else {
-                        lossyFileContainer.classList.add('d-none');
+                        lossyImageFileContainer.classList.add('d-none');
+                        lossyTextFileContainer.classList.add('d-none');
                         lossyTextContainer.classList.remove('d-none');
                     }
                 } else {
@@ -187,12 +267,24 @@
                     lossySection.classList.add('d-none');
                     losslessSection.classList.remove('d-none');
                     switchLabel.textContent = "Lossless Compression";
+
+                    // Handle Lossless Sub-options
+                    if (losslessTextFileOption.checked) {
+                        losslessTextContainer.classList.remove('d-none');
+                        losslessImageContainer.classList.add('d-none');
+                    } else {
+                        losslessTextContainer.classList.add('d-none');
+                        losslessImageContainer.classList.remove('d-none');
+                    }
                 }
             }
 
             switchEl.addEventListener('change', updateUI);
-            lossyFileOption.addEventListener('change', updateUI);
+            lossyImageFileOption.addEventListener('change', updateUI);
+            lossyTextFileOption.addEventListener('change', updateUI);
             lossyTextOption.addEventListener('change', updateUI);
+            losslessTextFileOption.addEventListener('change', updateUI);
+            losslessImageOption.addEventListener('change', updateUI);
 
             // Initialize
             updateUI();

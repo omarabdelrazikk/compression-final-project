@@ -1,0 +1,4 @@
+Hello, this is a test file for lossless compression!
+This file contains multiple lines of text.
+We will use this to test the file upload functionality.
+The compression algorithms should be able to compress this text efficiently.
